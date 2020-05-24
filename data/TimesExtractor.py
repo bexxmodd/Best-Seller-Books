@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import json
 import time
+import re
 
 from tqdm import tqdm
 from datetime import datetime
@@ -9,44 +10,72 @@ from datetime import datetime
 
 class TimesExtractor:
     """
-    Purpose of this class is to extrac best seller books from the Times API.
-    Times has limit on how many requests you can send, so we have to do with
+    The purpose of this class is to extract best seller books from the Times API.
+    Times has a limit on how many requests you can send, so we have to do with
     small ranges and then combine all the collected data into one dataframe.
     """
 
-    # this is a default api-key which can be changed
+    # Default api-key which can be changed.
     api_key = 'djDLXwAoSfreMrzYGE5iacl7GUifIRrV'
 
+    # Default lapse between calls
+    lapse = 3
+
     def __init__(self, start_date, end_date, frq):
+        """ Please enter dates in 'yyyy-mm-dd' format.
+        For f -> 'D'=day; 'W'=week; 'M'=month; 'Y'=year. """
         self.start_date = start_date
         self.end_date = end_date
         self.frq = frq
 
-    def __rep__(self):
+        # Raise Error if entered value doesn't match the pattern.
+        if not re.search(r"^\d{4}-\d{2}-\d{2}$", self.start_date):
+            raise ValueError('please enter start_date in \'yyyy-mm-dd\' format')
+        elif not re.search(r"^\d{4}-\d{2}-\d{2}$", self.end_date):
+            raise ValueError('please enter end_date in \'yyyy-mm-dd\' format')
+        elif self.frq not in ('D', 'W', 'M', 'Y'):
+            raise ValueError('please enter frequency in correct format')
+        else:
+            pass
+
+
+    def __str__(self):
         return f"The bestellers list is from {self.start_date} to {self.end_date}"
 
     def _datesrange(self):
-        """ Enter dates in 'yyyy-mm-dd' format.
-        For f -> 'D'=day; 'W'=week; 'M'=month; 'Y'=year. """
-        return pd.date_range(start=self.start_date, end=self.end_date, freq=self.frq)
+        if self.start_date >= self.end_date:
+            return [self.end_date]
+        else:
+            dates = [d for d in pd.date_range(start=self.start_date,
+                                        end=self.end_date,
+                                        freq=self.frq).strftime('%Y-%m-%d')]
+            return dates
+
 
     @classmethod
     def key(cls, key):
         cls.api_key = key
 
+    @classmethod
+    def lapse(cls, seconds):
+        cls.lapse = seconds
+
+
     def extractor(self):
         """
-        This function iterats throug the dates and sends the request
-        to the Times API based on given set of dates. After that combines
-        all the extracted dictionaries and returns as a combined dictionary.
+        This function iterates through the dates and sends the request
+        to the Times API for the given set of dates. After that, it combines
+        all the extracted dictionaries and returns as a combined list.
         """
-        super_dict = {}
+
+        super_list = []
+        print(f'Due to API\'s limitation, there is a {self.lapse} second lapse between calls')
         for date in tqdm(self._datesrange()):
-            """ API has a limit how many calls you make
+            """ API has a limit on how many calls you make
             per mnt. We set up the lapses between calls """
-            time.sleep(3)
+            time.sleep(self.lapse)
             print(date)
-            res = requests.get("https://api.nytimes.com/svc/books/v3/lists/{date}/combined-print-and-e-book-fiction.json?",
-                            params = {'api-key': self.api_key}).json()
-            super_dict.update(res)
-        return super_dict
+            res = requests.get(f"https://api.nytimes.com/svc/books/v3/lists/{date}/combined-print-and-e-book-fiction.json?",
+                                params = {'api-key': self.api_key}).json()
+            super_list.append(res['results']['books'])
+        return super_list

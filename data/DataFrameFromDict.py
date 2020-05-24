@@ -1,3 +1,5 @@
+from pandas import json_normalize
+
 class DataFrameFromDict(object):
     """
     Temporarily imports data frame columns and deletes them afterwards.
