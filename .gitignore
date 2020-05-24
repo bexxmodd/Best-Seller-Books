@@ -3,3 +3,5 @@
 venv
 requirements.txt
 .ipynb_checkpoints
+_pycache_
+*.pyc
