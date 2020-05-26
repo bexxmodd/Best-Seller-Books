@@ -1,12 +1,14 @@
 import pandas as pd
 
-class DataFrameFromPkl(object):
+class CSVtoDF(object):
     """
-    Temporarily imports data frame columns and deletes them afterwards.
+    Temporarily imports data frame columns from .csv file
+    and deletes them after selecting the needed columns.
+
     """
 
-    def __init__(self, pickle):
-        self.df = pd.read_pkl(pickle)
+    def __init__(self, file):
+        self.df = pd.read_csv(file)
         self.columns = list(self.df.columns.values)
 
     def __enter__(self):

@@ -6,7 +6,7 @@ requirements.txt
 .ipynb_checkpoints
 *.pkl
 *.csv
-GR_meta_data.txt
+GR_metadata.txt
 test.py
 
 # Byte-compiled / optimized / DLL files
