@@ -7,42 +7,38 @@ from bs4 import BeautifulSoup
 
 
 class GoodReadsScraper():
-    """ This module will be used to scrap the infromation from the Goodreads webpage
-    based on provided list of ISBN13 numbers.
+    """ This module scraps the infromation from the Goodreads webpage.
+    You provide list of ISBN's as the argument and then magic happens.
 
     attributes obtained: author, title, number of pages, edition, cover_url, genres
     """
-    lapse = 3
-
+    
     def __init__(self, isbns):
         self.isbns = isbns
+        self.soups = [BeautifulSoup(requests.get(f'https://www.goodreads.com/book/isbn/{i}').text, 'html.parser') for i in self.isbns]
+
 
     def __str__(self):
-        return f"So you plan to scrap data about {len(self.isbns)} books from the Goodreads.com?"
-    
-    @property
-    def set_lapse(cls, seconds):
-        cls.lapse = seconds
-
+        return f"So you plan to scrap data for {len(self.isbns)} books from the Goodreads.com?"
 
     def _goodreads_scraping(self):
+        """ this method extracts number of pages, book's edition
+        and cover picture url from accrued html texts.
+        
+        """
         isbn_13, pages, edition, cover_pic_url = [], [], [], []
-
-        for isbn in self.isbns:
-            isbn_13.append(isbn)
-            time.sleep(2)
-
-            r = requests.get(f'https://www.goodreads.com/book/isbn/{isbn}')
-            soup = BeautifulSoup(r.text, 'html.parser')
-
-            pages.append(soup.find(itemprop="numberOfPages").text)
-            edition.append(soup.find(itemprop="bookFormat").text)
-            cover_pic_url.append(soup.find(id='coverImage')['src'])
-            
+        for s, i in zip(self.soups, self.isbns):
+            isbn_13.append(i)
+            pages.append(getattr(s.find(itemprop="numberOfPages"), 'text', None))
+            edition.append(getattr(s.find(itemprop="bookFormat"), 'text', None))
+            cover = s.find(id='coverImage')['src']
+            if cover is not None:
+                cover_pic_url.append(cover)
         return isbn_13, pages, edition, cover_pic_url
             
 
     def data_converter(self):
+        # convertes previously extracted list into dataframe
         i, p, e, c = self._goodreads_scraping()
         df = pd.DataFrame({'isbn13': i,
                             'pages': p,
@@ -52,22 +48,22 @@ class GoodReadsScraper():
 
 
     def _genre_scraping(self):
+        """ 
+        This method extracts three top genres of the book.
+
+        """
         isbn_13, g1, g2, g3 = [], [], [], []
-        for isbn in self.isbns:
-            isbn_13.append(isbn)
-            time.sleep(2)
-
-            r = requests.get(f'https://www.goodreads.com/book/isbn/{isbn}')
-            soup = BeautifulSoup(r.text, 'html.parser')
-
-            genrs = soup.find_all(class_='actionLinkLite bookPageGenreLink')[0:3]
-            g1.append(genrs[0].text)
-            g2.append(genrs[1].text)
-            g3.append(genrs[2].text)
+        for s, i in zip(self.soups, self.isbns):
+            isbn_13.append(i)
+            genrs = s.find_all(class_='actionLinkLite bookPageGenreLink')[0:3]
+            g1.append(getattr(genrs[0], 'text', None))
+            g2.append(getattr(genrs[1], 'text', None))
+            g3.append(getattr(genrs[2], 'text', None))
         return isbn_13, g2, g2, g3
             
 
     def genre_converter(self):
+        # convertes previously extracted list into dataframe
         i, g1, g2, g3 = self._genre_scraping()
         df = pd.DataFrame({'isbn13': i,
                         'primary_genre': g1,
@@ -77,21 +73,22 @@ class GoodReadsScraper():
     
     
     def _meta_scraping(self):
-        isbn, author, title = [], [], []
-        for isbn in self.isbns:
-            isbn_13.append(isbn)
-            time.sleep(2)
-
-            r = requests.get(f'https://www.goodreads.com/book/isbn/{isbn}')
-            soup = BeautifulSoup(r.text, 'html.parser')
-            author.append(soup.find(class_='authorName').text)
-            title.append(soup.find(class_="gr-h1 gr-h1--serif").text)
-        return isbn, author, title
+        """ This method extracts meta data of the book.
+        Book's title and author's full name.
+        
+        """
+        isbn_13, author, title = [], [], []
+        for s, i in zip(self.soups, self.isbns):
+            isbn_13.append(i)
+            author.append(getattr(s.find(class_='authorName'), 'text', None))
+            title.append(getattr(s.find(class_="gr-h1 gr-h1--serif"), 'text', None))
+        return isbn_13, author, title
 
 
     def meta_converter(self):
+        # convertes previously extracted list into dataframe
         i, a, t = self._meta_scraping()
         df = pd.DataFrame({'isbn13': i,
-                        'author': g1,
-                        'title': g2})
+                        'author': a,
+                        'title': t})
         return df
