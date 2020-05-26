@@ -9,10 +9,11 @@ from datetime import datetime
 
 
 class TimesExtractor:
-    """
-    The purpose of this class is to extract best seller books from the Times API.
-    Times has a limit on how many requests you can send, so we have to do with
-    small ranges and then combine all the collected data into one dataframe.
+    """ The purpose of the module is to extract books data from the Times API.
+
+    Times has a limit on how many requests you can send, so we have to do
+    with time lapses and then combine all the collected data into one list.
+
     """
 
     # Default api-key which can be changed.
@@ -23,7 +24,9 @@ class TimesExtractor:
 
     def __init__(self, start_date, end_date, frq):
         """ Please enter dates in 'yyyy-mm-dd' format.
-        For f -> 'D'=day; 'W'=week; 'M'=month; 'Y'=year. """
+
+        For frq -> 'D'=day; 'W'=week; 'M'=month; 'Y'=year.
+        """
         self.start_date = start_date
         self.end_date = end_date
         self.frq = frq
@@ -57,22 +60,26 @@ class TimesExtractor:
         cls.api_key = key
 
     @classmethod
-    def lapse(cls, seconds):
-        cls.lapse = seconds
+    def seconds(cls, second):
+        cls.lapse = second
 
 
-    def extractor(self):
-        """
-        This function iterates through the dates and sends the request
-        to the Times API for the given set of dates. After that, it combines
-        all the extracted dictionaries and returns as a combined list.
+    def make_call(self):
+        """ This function iterates through the dates and sends the request
+        to the Times API for the given set of dates.
+        
+        Next, it returns all the dictionaries as a combined list.
         """
 
         super_list = []
         print(f'Due to API\'s limitation, there is a {self.lapse} second lapse between calls')
         for date in tqdm(self._datesrange()):
-            """ API has a limit on how many calls you make
-            per mnt. We set up the lapses between calls """
+            """ Times API has a daily limit on calls
+            and a requirement for intervals between calls.
+            
+            Thus, we set up the lapses between calls.
+            """
+
             time.sleep(self.lapse)
             print(date)
             res = requests.get(f"https://api.nytimes.com/svc/books/v3/lists/{date}/combined-print-and-e-book-fiction.json?",

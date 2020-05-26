@@ -1,9 +1,13 @@
+# Specific to the project
 *.[oa]
 *~
 venv
 requirements.txt
 .ipynb_checkpoints
 *.pkl
+*.csv
+GR_meta_data.txt
+test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

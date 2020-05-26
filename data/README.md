@@ -1,0 +1,1 @@
+Soon I'll put information about the procedures of obtaining data from two soruces and how it will be combined into one file for EDA and Modeling

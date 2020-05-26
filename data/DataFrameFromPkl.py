@@ -1,12 +1,12 @@
-from pandas import json_normalize
+import pandas as pd
 
-class DataFrameFromDict(object):
+class DataFrameFromPkl(object):
     """
     Temporarily imports data frame columns and deletes them afterwards.
     """
 
-    def __init__(self, data):
-        self.df = json_normalize(data)
+    def __init__(self, pickle):
+        self.df = pd.read_pkl(pickle)
         self.columns = list(self.df.columns.values)
 
     def __enter__(self):
@@ -14,3 +14,4 @@ class DataFrameFromDict(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.df.drop([c for c in self.columns], axis=1, inplace=True)
+
