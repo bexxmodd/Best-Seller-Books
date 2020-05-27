@@ -1,6 +1,6 @@
-https://www.goodreads.com/book/isbn/
+https://www.goodreads.com/book/isbn/9780553897852
 
-- [x] Book Title:
+- [] Book Title:
 <h1 id="bookTitle" class="gr-h1 gr-h1--serif" itemprop="name">
       Harry Potter and the Sorcerer's Stone
 </h1>
@@ -8,7 +8,7 @@ https://www.goodreads.com/book/isbn/
 >>> soup.find(class_="gr-h1 gr-h1--serif").text
 
 
-- [x] Book Author:
+- [] Book Author:
 <a class="authorName" itemprop="url" href="https://www.goodreads.com/author/show/1077326.J_K_Rowling"><span itemprop="name">J.K. Rowling</span></a>
 
 >>> soup.find(class_='authorName').text
@@ -38,6 +38,9 @@ https://www.goodreads.com/book/isbn/
 <img id="coverImage" alt="Harry Potter and the Sorcerer's Stone" src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1474169299l/77523._SY475_.jpg">
 
 >>> soup.find(id='coverImage')['src']
+
+- [x] Genres:
+>>> soup.find_all(class_='actionLinkLite bookPageGenreLink')[0:3]
 
 
 - [x] Rating Value:
