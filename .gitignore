@@ -2,11 +2,10 @@
 *.[oa]
 *~
 venv
-requirements.txt
 .ipynb_checkpoints
 *.pkl
 *.csv
-*.txt
+goodreads_metadata.txt
 test.py
 
 # Byte-compiled / optimized / DLL files
