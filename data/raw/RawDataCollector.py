@@ -27,62 +27,45 @@ class GoodReadsScraper():
     def __str__(self):
         return f"You just scrapped {len(self.isbns)} books from the Goodreads.com!"
 
+    def store_html(self):
+        # If you want to store scraped HTML as a list
+        return self.soups
+
     def _goodreads_scraping(self):
         """ This method extracts the number of pages,
             book's edition from accrued HTML texts.
         
         """
-        isbn_13, pages, edition = [], [], []
+        isbn_13, pages, edition, released = [], [], [], []
         for s, i in zip(self.soups, self.isbns):
             isbn_13.append(i)
             pages.append(getattr(s.find(itemprop="numberOfPages"), 'text', None))
+            released.append(getattr(s.select_one('nobr'), 'text', None))
             edition.append(getattr(s.find(itemprop="bookFormat"), 'text', None))
-        return isbn_13, pages, edition
+        return isbn_13, pages, released, edition
             
     def data_converter(self):
         # Convertes previously extracted list into dataframe.
-        i, p, e = self._goodreads_scraping()
-        df = pd.DataFrame({'isbn13': i,
-                            'pages': p,
-                            'edition': e})
-        return df
-
-    def _genre_scraping(self):
-        """ 
-        This method extracts top three genres of the book.
-
-        """
-        isbn_13, g = [], []
-        for s, i in zip(self.soups, self.isbns):
-            isbn_13.append(i)
-            g.append(s.find_all(class_='actionLinkLite bookPageGenreLink')[:3])
-        return isbn_13, g
-            
-    def genre_converter(self):
-        # Convertes previously extracted list into dataframe.
-        i, g = self._genre_scraping()
-        df = pd.DataFrame({'isbn13': i, 'genres': g})
-        return df
+        i, p, r, e = self._goodreads_scraping()
+        return pd.DataFrame({'isbn13': i, 'pages': p, 'released': r, 'edition': e})
     
     def _meta_scraping(self):
         """ This method extracts the metadata of the book.
-            That is book's title and author's full name.
+            That is book's title and author's full name & genre.
         
         """
-        isbn_13, author, title = [], [], []
+        isbn_13, author, title, genre = [], [], [], []
         for s, i in zip(self.soups, self.isbns):
             isbn_13.append(i)
             author.append(getattr(s.find(class_='authorName'), 'text', None))
             title.append(getattr(s.find(class_="gr-h1 gr-h1--serif"), 'text', None))
-        return isbn_13, author, title
+            genre.append(s.find_all(class_='actionLinkLite bookPageGenreLink')[:3])
+        return isbn_13, author, title, genre
 
     def meta_converter(self):
         # Convertes previously extracted list into dataframe.
-        i, a, t = self._meta_scraping()
-        df = pd.DataFrame({'isbn13': i,
-                            'author': a,
-                            'title': t})
-        return df
+        i, a, t, g = self._meta_scraping()
+        return pd.DataFrame({'isbn13': i, 'author': a, 'title': t, 'genres': g})
 
     def _pop_scraping(self):
         """
@@ -99,10 +82,7 @@ class GoodReadsScraper():
     def pop_converter(self):
         # Convertes previously extracted list into dataframe.
         i, r, c = self._pop_scraping()
-        df = pd.DataFrame({'isbn13': i,
-                            'rating': r,
-                            'count': c})
-        return df
+        return pd.DataFrame({'isbn13': i, 'rating': r, 'count': c})
 
     def _cover_scraper(self):
         """ This method grabs cover picture URL.
@@ -122,9 +102,20 @@ class GoodReadsScraper():
     def cover_url_converter(self):
         # Convertes previously extracted list into dataframe.
         i, cu = self._cover_scraper()
-        df = pd.DataFrame({'isbn13': i,
-                            'cover_url': cu})
-        return df
+        return pd.DataFrame({'isbn13': i, 'cover_url': cu})
+
+    def description(self):
+        """ Extract description text in a raw format
+        
+        """
+        isbn_13, descr = [], []
+        for s, i in zip(self.soups, self.isbns):
+            isbn_13.append(i)
+        try:
+            descr.append(s.find(id='description').text)
+        except TypeError:
+            descr.append(np.NaN)
+        return pd.DataFrame({'isbn13': i, 'description': descr})
 
 
 class TimesExtractor:
@@ -200,6 +191,6 @@ class TimesExtractor:
         return super_list
 
 
-
 if __name__ == "__main__":
     print('This method is intended to be used within Jupyter Notebook...')
+

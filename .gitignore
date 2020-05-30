@@ -7,6 +7,8 @@ venv
 *.csv
 goodreads_metadata.txt
 test.py
+practice.py
+*.exe
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
